@@ -39,6 +39,29 @@
         return mediumParts.join('|');
     }
 
+    // Função para processar utm_source quando estiver vazio
+    function processUTMSource(t) {
+        let utmSource = t.get("utm_source");
+
+        // Se utm_source já tiver algum valor, não fazemos nada
+        if (utmSource) return;
+
+        // Se não tiver valor, verificamos o referrer
+        let referrer = document.referrer;
+
+        if (!referrer) {
+            // Acesso direto, seta utm_source como "direto"
+            t.set("utm_source", "direto");
+        } else {
+            // Captura o domínio do site que referenciou
+            let referrerUrl = new URL(referrer);
+            let referrerDomain = referrerUrl.hostname;
+            
+            // Define o domínio do site que referenciou no utm_source
+            t.set("utm_source", referrerDomain);
+        }
+    }
+
     function updateLinks() {
         var t = new URLSearchParams(window.location.search);
         var xcod = getCookie("LeadUserIndex");
@@ -49,6 +72,9 @@
 
             // Adiciona o userindex no utm_medium
             t.set("utm_medium", currentUTMMedium ? `${currentUTMMedium}|${xcod}` : xcod);
+
+            // Processa o utm_source para verificar se está vazio
+            processUTMSource(t);
 
             t.toString() && document.querySelectorAll("a").forEach(function(e) {
                 for (let r = 0; r < prefix.length; r++) {
